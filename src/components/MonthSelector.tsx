@@ -17,16 +17,16 @@ export function MonthSelector({ selectedMonth, onMonthChange, defaults, onDefaul
   const currentYear = new Date().getFullYear()
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i)
   const months = [
-    { value: '01', label: 'January' },
-    { value: '02', label: 'February' },
-    { value: '03', label: 'March' },
-    { value: '04', label: 'April' },
-    { value: '05', label: 'May' },
-    { value: '06', label: 'June' },
-    { value: '07', label: 'July' },
-    { value: '08', label: 'August' },
-    { value: '09', label: 'September' },
-    { value: '10', label: 'October' },
+    { value: '01', label: 'Január' },
+    { value: '02', label: 'Február' },
+    { value: '03', label: 'Március' },
+    { value: '04', label: 'Április' },
+    { value: '05', label: 'Május' },
+    { value: '06', label: 'Június' },
+    { value: '07', label: 'Július' },
+    { value: '08', label: 'Augusztus' },
+    { value: '09', label: 'Szeptember' },
+    { value: '10', label: 'Október' },
     { value: '11', label: 'November' },
     { value: '12', label: 'December' }
   ]
@@ -67,20 +67,20 @@ export function MonthSelector({ selectedMonth, onMonthChange, defaults, onDefaul
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm">
             <Gear className="w-4 h-4 mr-2" />
-            Default Shift
+            Alapértelmezett műszak
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-80">
           <div className="space-y-4">
             <div>
-              <h4 className="font-medium mb-2">Default Shift Times</h4>
+              <h4 className="font-medium mb-2">Alapértelmezett műszak idők</h4>
               <p className="text-sm text-muted-foreground mb-4">
-                Used when IN or OUT logs are missing
+                Hiányzó BE vagy KI naplók esetén használt
               </p>
             </div>
             <div className="space-y-3">
               <div className="space-y-2">
-                <Label htmlFor="start-time">Start Time</Label>
+                <Label htmlFor="start-time">Kezdés ideje</Label>
                 <Input
                   id="start-time"
                   type="time"
@@ -89,7 +89,7 @@ export function MonthSelector({ selectedMonth, onMonthChange, defaults, onDefaul
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="end-time">End Time</Label>
+                <Label htmlFor="end-time">Befejezés ideje</Label>
                 <Input
                   id="end-time"
                   type="time"

@@ -65,7 +65,7 @@ class WorkTimeDB {
 
   private ensureDB(): IDBDatabase {
     if (!this.db) {
-      throw new Error('Database not initialized')
+      throw new Error('Adatbázis nincs inicializálva')
     }
     return this.db
   }
@@ -156,7 +156,7 @@ export async function loadShiftDefaults<T>(): Promise<T | null> {
 
 export async function setEmployeeName(employeeId: string, name: string): Promise<void> {
   const db = workTimeDB['db']
-  if (!db) throw new Error('Database not initialized')
+  if (!db) throw new Error('Adatbázis nincs inicializálva')
   
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(['employeeNames'], 'readwrite')
@@ -174,7 +174,7 @@ export async function setEmployeeName(employeeId: string, name: string): Promise
 
 export async function getEmployeeName(employeeId: string): Promise<string | null> {
   const db = workTimeDB['db']
-  if (!db) throw new Error('Database not initialized')
+  if (!db) throw new Error('Adatbázis nincs inicializálva')
   
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(['employeeNames'], 'readonly')
@@ -191,7 +191,7 @@ export async function getEmployeeName(employeeId: string): Promise<string | null
 
 export async function getAllEmployeeNames(): Promise<Record<string, string>> {
   const db = workTimeDB['db']
-  if (!db) throw new Error('Database not initialized')
+  if (!db) throw new Error('Adatbázis nincs inicializálva')
   
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(['employeeNames'], 'readonly')

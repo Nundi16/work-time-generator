@@ -73,8 +73,8 @@ function App() {
         const names = await getAllEmployeeNames()
         setEmployeeNames(names)
       } catch (err) {
-        console.error('Failed to load data from IndexedDB:', err)
-        toast.error('Failed to load saved data')
+        console.error('Nem sikerült betölteni az adatokat az IndexedDB-ből:', err)
+        toast.error('Nem sikerült betölteni a mentett adatokat')
       } finally {
         setIsLoading(false)
       }
@@ -85,19 +85,19 @@ function App() {
 
   useEffect(() => {
     if (!isLoading && logs.length > 0) {
-      saveLogs(logs).catch(err => console.error('Failed to save logs:', err))
+      saveLogs(logs).catch(err => console.error('Naplók mentése sikertelen:', err))
     }
   }, [logs, isLoading])
 
   useEffect(() => {
     if (!isLoading && monthlyRecords.length > 0) {
-      saveMonthlyRecords(monthlyRecords).catch(err => console.error('Failed to save records:', err))
+      saveMonthlyRecords(monthlyRecords).catch(err => console.error('Adatok mentése sikertelen:', err))
     }
   }, [monthlyRecords, isLoading])
 
   useEffect(() => {
     if (!isLoading) {
-      saveShiftDefaults(defaults).catch(err => console.error('Failed to save defaults:', err))
+      saveShiftDefaults(defaults).catch(err => console.error('Alapértékek mentése sikertelen:', err))
     }
   }, [defaults, isLoading])
 
@@ -108,13 +108,13 @@ function App() {
       setParseWarnings(result.warnings)
       
       if (result.skippedLines > 0) {
-        toast.warning(`Loaded ${result.entries.length} entries, ${result.skippedLines} lines skipped`)
+        toast.warning(`${result.entries.length} bejegyzés betöltve, ${result.skippedLines} sor kihagyva`)
       } else {
-        toast.success(`Loaded ${result.entries.length} log entries`)
+        toast.success(`${result.entries.length} napló bejegyzés betöltve`)
       }
       setError(null)
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to parse CSV file'
+      const errorMsg = err instanceof Error ? err.message : 'CSV fájl feldolgozása sikertelen'
       setError(errorMsg)
       setParseWarnings([])
       toast.error(errorMsg)
@@ -123,7 +123,7 @@ function App() {
 
   const handleGenerate = () => {
     if (!logs || logs.length === 0) {
-      toast.error('Please upload a CSV file first')
+      toast.error('Először töltsön fel egy CSV fájlt')
       return
     }
 
@@ -151,7 +151,7 @@ function App() {
       return [...filtered, ...recordsWithNames]
     })
     
-    toast.success(`Generated records for ${records.length} employees`)
+    toast.success(`${records.length} dolgozó adatai generálva`)
     setShowRegenerateDialog(false)
   }
 
@@ -179,9 +179,9 @@ function App() {
         )
       )
       
-      toast.success(`Employee name updated`)
+      toast.success(`Dolgozó neve frissítve`)
     } catch (err) {
-      toast.error('Failed to update employee name')
+      toast.error('Dolgozó nevének frissítése sikertelen')
       console.error(err)
     }
   }
@@ -197,7 +197,7 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading data...</p>
+          <p className="text-muted-foreground">Adatok betöltése...</p>
         </div>
       </div>
     )
@@ -208,10 +208,10 @@ function App() {
       <div className="container mx-auto px-4 md:px-8 py-8 max-w-7xl no-print">
         <header className="mb-8">
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mb-2">
-            Work Time Generator
+            Munkaidő Generátor
           </h1>
           <p className="text-muted-foreground">
-            Transform access control logs into accurate monthly work time records
+            Beléptető rendszer naplóiból pontos havi munkaidő nyilvántartás készítése
           </p>
         </header>
 
@@ -226,7 +226,7 @@ function App() {
           {parseWarnings.length > 0 && (
             <Alert>
               <Info className="w-4 h-4" />
-              <AlertTitle>File Processing Warnings</AlertTitle>
+              <AlertTitle>Fájl feldolgozási figyelmeztetések</AlertTitle>
               <AlertDescription>
                 <div className="mt-2 space-y-1 text-sm">
                   {parseWarnings.slice(0, 10).map((warning, idx) => (
@@ -234,7 +234,7 @@ function App() {
                   ))}
                   {parseWarnings.length > 10 && (
                     <div className="text-muted-foreground italic mt-2">
-                      ...and {parseWarnings.length - 10} more warnings
+                      ...és még {parseWarnings.length - 10} figyelmeztetés
                     </div>
                   )}
                 </div>
@@ -244,11 +244,11 @@ function App() {
 
           <div className="bg-card rounded-lg border p-6 space-y-4">
             <div>
-              <h2 className="text-lg font-medium mb-4">1. Upload Access Logs</h2>
+              <h2 className="text-lg font-medium mb-4">1. Beléptető naplók feltöltése</h2>
               <FileUpload onFileUpload={handleFileUpload} />
               {logs && logs.length > 0 && (
                 <p className="text-sm text-muted-foreground mt-2">
-                  ✓ Loaded {logs.length} log entries
+                  ✓ {logs.length} napló bejegyzés betöltve
                 </p>
               )}
             </div>
@@ -256,7 +256,7 @@ function App() {
             <Separator />
 
             <div>
-              <h2 className="text-lg font-medium mb-4">2. Select Month & Generate</h2>
+              <h2 className="text-lg font-medium mb-4">2. Hónap kiválasztása és generálás</h2>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <MonthSelector
                   selectedMonth={selectedMonth}
@@ -266,7 +266,7 @@ function App() {
                 />
                 <Button onClick={handleGenerate} size="lg" className="gap-2">
                   <ArrowsClockwise className="w-5 h-5" />
-                  Generate Monthly Table
+                  Havi táblázat generálása
                 </Button>
               </div>
             </div>
@@ -277,7 +277,7 @@ function App() {
                 <div className="flex flex-wrap gap-2">
                   <Button onClick={handlePrint} variant="outline" className="gap-2">
                     <Printer className="w-4 h-4" />
-                    Print
+                    Nyomtatás
                   </Button>
                 </div>
               </>
@@ -287,7 +287,7 @@ function App() {
           {recordsForSelectedMonth.length === 0 && logs && logs.length > 0 && (
             <Alert>
               <AlertDescription>
-                No records generated yet. Click "Generate Monthly Table" to create work time records.
+                Még nincs generált adat. Kattintson a "Havi táblázat generálása" gombra a munkaidő nyilvántartás létrehozásához.
               </AlertDescription>
             </Alert>
           )}
@@ -313,18 +313,18 @@ function App() {
       <Dialog open={showRegenerateDialog} onOpenChange={setShowRegenerateDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Regenerate Monthly Records?</DialogTitle>
+            <DialogTitle>Újragenerálja a havi adatokat?</DialogTitle>
             <DialogDescription>
-              This will overwrite all existing records for {selectedMonth}, including any manual corrections
-              you've made. This action cannot be undone.
+              Ez felülírja az összes meglévő adatot {selectedMonth} hónapra, beleértve az összes kézi módosítást is. 
+              Ez a művelet nem vonható vissza.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowRegenerateDialog(false)}>
-              Cancel
+              Mégse
             </Button>
             <Button variant="destructive" onClick={performGeneration}>
-              Regenerate
+              Újragenerálás
             </Button>
           </DialogFooter>
         </DialogContent>

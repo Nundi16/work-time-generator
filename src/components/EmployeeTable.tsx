@@ -63,7 +63,7 @@ export function EmployeeTable({ record, onRecordUpdate, onNameChange, index }: E
                   <Input
                     value={nameInput}
                     onChange={(e) => setNameInput(e.target.value)}
-                    placeholder="Employee name"
+                    placeholder="Dolgozó neve"
                     className="w-64"
                     autoFocus
                     onKeyDown={(e) => {
@@ -84,7 +84,7 @@ export function EmployeeTable({ record, onRecordUpdate, onNameChange, index }: E
                   className="flex items-center gap-2 hover:bg-muted/30 px-3 py-1 rounded transition-colors group"
                 >
                   <CardTitle className="text-xl">
-                    {record.employeeName || `Employee ${record.employeeId}`}
+                    {record.employeeName || `Dolgozó ${record.employeeId}`}
                   </CardTitle>
                   <PencilSimple className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
@@ -97,7 +97,7 @@ export function EmployeeTable({ record, onRecordUpdate, onNameChange, index }: E
             </div>
             <div className="text-right">
               <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
-                Total Hours
+                Összes óra
               </div>
               <div className="text-2xl font-semibold font-data text-accent">
                 {formatMinutesToHours(totalMinutes)}
@@ -111,19 +111,19 @@ export function EmployeeTable({ record, onRecordUpdate, onNameChange, index }: E
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
-                    Date
+                    Dátum
                   </th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
-                    Arrival
+                    Érkezés
                   </th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
-                    Departure
+                    Távozás
                   </th>
                   <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">
-                    Hours
+                    Órák
                   </th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
-                    Status
+                    Státusz
                   </th>
                 </tr>
               </thead>
@@ -138,7 +138,7 @@ export function EmployeeTable({ record, onRecordUpdate, onNameChange, index }: E
                       className="border-b hover:bg-muted/30 transition-colors"
                     >
                       <td className="py-2 px-4 font-data text-sm">
-                        {new Date(day.date).toLocaleDateString('en-US', {
+                        {new Date(day.date).toLocaleDateString('hu-HU', {
                           month: 'short',
                           day: 'numeric',
                           weekday: 'short'
@@ -202,25 +202,25 @@ export function EmployeeTable({ record, onRecordUpdate, onNameChange, index }: E
                           {day.missingIn && (
                             <Badge variant="outline" className="text-xs border-warning text-warning">
                               <WarningCircle className="w-3 h-3 mr-1" />
-                              No IN
+                              Nincs BE
                             </Badge>
                           )}
                           {day.missingOut && (
                             <Badge variant="outline" className="text-xs border-warning text-warning">
                               <WarningCircle className="w-3 h-3 mr-1" />
-                              No OUT
+                              Nincs KI
                             </Badge>
                           )}
                           {day.hasMultipleLogs && (
                             <Badge variant="outline" className="text-xs">
                               <Info className="w-3 h-3 mr-1" />
-                              Multiple
+                              Többszörös
                             </Badge>
                           )}
                           {day.manuallyEdited && (
                             <Badge variant="secondary" className="text-xs">
                               <PencilSimple className="w-3 h-3 mr-1" />
-                              Edited
+                              Szerkesztett
                             </Badge>
                           )}
                         </div>
@@ -232,7 +232,7 @@ export function EmployeeTable({ record, onRecordUpdate, onNameChange, index }: E
               <tfoot>
                 <tr className="border-t-2 font-semibold">
                   <td className="py-3 px-4 text-sm" colSpan={3}>
-                    Monthly Total
+                    Havi összesítés
                   </td>
                   <td className="py-3 px-4 text-right">
                     <span className="font-data text-base text-accent">

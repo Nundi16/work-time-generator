@@ -66,10 +66,10 @@ export function FileUpload({ onFileUpload }: FileUploadProps) {
       />
       <UploadSimple className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
       <p className="text-sm font-medium mb-1">
-        Drop CSV file here or click to upload
+        Húzza ide a CSV fájlt vagy kattintson a feltöltéshez
       </p>
       <p className="text-xs text-muted-foreground">
-        Tab-separated access log file (.csv, .tsv, .txt)
+        Tabulátorral elválasztott beléptető napló (.csv, .tsv, .txt)
       </p>
     </div>
   )

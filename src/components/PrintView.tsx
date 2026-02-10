@@ -8,7 +8,7 @@ interface PrintViewProps {
 
 export function PrintView({ records, month }: PrintViewProps) {
   const monthDate = new Date(month + '-01')
-  const monthName = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  const monthName = monthDate.toLocaleDateString('hu-HU', { month: 'long', year: 'numeric' })
 
   return (
     <div className="hidden print:block">
@@ -20,7 +20,7 @@ export function PrintView({ records, month }: PrintViewProps) {
           <div key={record.employeeId} className={index < records.length - 1 ? 'print-page-break' : ''}>
             <div className="mb-6">
               <h1 className="text-2xl font-semibold mb-1">
-                {record.employeeName || `Employee ${record.employeeId}`}
+                {record.employeeName || `Dolgozó ${record.employeeId}`}
               </h1>
               <p className="text-sm text-gray-600">{monthName}</p>
             </div>
@@ -28,25 +28,25 @@ export function PrintView({ records, month }: PrintViewProps) {
             <table className="w-full border-collapse mb-4">
               <thead>
                 <tr className="border-b-2 border-black">
-                  <th className="text-left py-2 px-2 text-sm font-semibold">Date</th>
-                  <th className="text-left py-2 px-2 text-sm font-semibold">Day</th>
-                  <th className="text-left py-2 px-2 text-sm font-semibold">Arrival</th>
-                  <th className="text-left py-2 px-2 text-sm font-semibold">Departure</th>
-                  <th className="text-right py-2 px-2 text-sm font-semibold">Hours</th>
-                  <th className="text-left py-2 px-2 text-sm font-semibold">Notes</th>
+                  <th className="text-left py-2 px-2 text-sm font-semibold">Dátum</th>
+                  <th className="text-left py-2 px-2 text-sm font-semibold">Nap</th>
+                  <th className="text-left py-2 px-2 text-sm font-semibold">Érkezés</th>
+                  <th className="text-left py-2 px-2 text-sm font-semibold">Távozás</th>
+                  <th className="text-right py-2 px-2 text-sm font-semibold">Órák</th>
+                  <th className="text-left py-2 px-2 text-sm font-semibold">Megjegyzések</th>
                 </tr>
               </thead>
               <tbody>
                 {recordsWithData.map((day) => {
                   const date = new Date(day.date)
-                  const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
-                  const dateNum = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                  const dayName = date.toLocaleDateString('hu-HU', { weekday: 'short' })
+                  const dateNum = date.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' })
                   
                   const notes: string[] = []
-                  if (day.missingIn) notes.push('No IN')
-                  if (day.missingOut) notes.push('No OUT')
-                  if (day.hasMultipleLogs) notes.push('Multiple logs')
-                  if (day.manuallyEdited) notes.push('Edited')
+                  if (day.missingIn) notes.push('Nincs BE')
+                  if (day.missingOut) notes.push('Nincs KI')
+                  if (day.hasMultipleLogs) notes.push('Többszörös napló')
+                  if (day.manuallyEdited) notes.push('Szerkesztett')
 
                   return (
                     <tr key={day.date} className="border-b border-gray-300">
@@ -70,7 +70,7 @@ export function PrintView({ records, month }: PrintViewProps) {
               </tbody>
               <tfoot>
                 <tr className="border-t-2 border-black font-semibold">
-                  <td colSpan={4} className="py-2 px-2 text-sm">Total Hours:</td>
+                  <td colSpan={4} className="py-2 px-2 text-sm">Összes óra:</td>
                   <td className="py-2 px-2 text-sm text-right font-mono">
                     {formatMinutesToHours(totalMinutes)}
                   </td>
@@ -80,7 +80,7 @@ export function PrintView({ records, month }: PrintViewProps) {
             </table>
 
             <div className="text-xs text-gray-500 mt-6">
-              <p>Generated: {new Date().toLocaleDateString('en-US', { 
+              <p>Generálva: {new Date().toLocaleDateString('hu-HU', { 
                 year: 'numeric', 
                 month: 'long', 
                 day: 'numeric',
