@@ -4,31 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Badge } from './ui/badge'
 import { Input } from './ui/input'
 import { Button } from './ui/button'
-import { WarningCircle, Info, PencilSimple, UserMinus, ArrowCounterClockwise } from '@phosphor-icons/react'
+import { WarningCircle, Info, PencilSimple, Check, X } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from './ui/alert-dialog'
 
 interface EmployeeTableProps {
   record: EmployeeMonthlyRecord
   onRecordUpdate: (employeeId: string, dailyRecords: DailyWorkRecord[]) => void
-  onDismiss: (employeeId: string) => void
-  onUndismiss: (employeeId: string) => void
+  onNameChange: (employeeId: string, name: string) => void
   index: number
 }
 
-export function EmployeeTable({ record, onRecordUpdate, onDismiss, onUndismiss, index }: EmployeeTableProps) {
+export function EmployeeTable({ record, onRecordUpdate, onNameChange, index }: EmployeeTableProps) {
   const [editingCell, setEditingCell] = useState<string | null>(null)
-  const [showDismissDialog, setShowDismissDialog] = useState(false)
+  const [editingName, setEditingName] = useState(false)
+  const [nameInput, setNameInput] = useState(record.employeeName || '')
 
   const handleTimeEdit = (dayIndex: number, field: 'arrival' | 'departure', value: string) => {
     const updatedRecords = [...record.dailyRecords]
@@ -42,18 +32,21 @@ export function EmployeeTable({ record, onRecordUpdate, onDismiss, onUndismiss, 
     setEditingCell(null)
   }
 
+  const handleNameSave = () => {
+    if (nameInput.trim()) {
+      onNameChange(record.employeeId, nameInput.trim())
+    }
+    setEditingName(false)
+  }
+
+  const handleNameCancel = () => {
+    setNameInput(record.employeeName || '')
+    setEditingName(false)
+  }
+
   const totalMinutes = record.dailyRecords.reduce((sum, day) => sum + day.workedMinutes, 0)
 
   const recordsWithData = record.dailyRecords.filter(day => day.arrival || day.departure)
-
-  const handleDismissConfirm = () => {
-    onDismiss(record.employeeId)
-    setShowDismissDialog(false)
-  }
-
-  const handleUndismiss = () => {
-    onUndismiss(record.employeeId)
-  }
 
   return (
     <motion.div
@@ -61,48 +54,53 @@ export function EmployeeTable({ record, onRecordUpdate, onDismiss, onUndismiss, 
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1, duration: 0.3 }}
     >
-      <Card className={record.isDismissed ? 'opacity-60 border-destructive/30' : ''}>
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <CardTitle className="text-xl">Employee {record.employeeId}</CardTitle>
-              {record.isDismissed && (
-                <Badge variant="destructive" className="text-xs">
-                  Dismissed
+              {editingName ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    placeholder="Employee name"
+                    className="w-64"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleNameSave()
+                      if (e.key === 'Escape') handleNameCancel()
+                    }}
+                  />
+                  <Button size="icon" variant="ghost" onClick={handleNameSave}>
+                    <Check className="w-4 h-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={handleNameCancel}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setEditingName(true)}
+                  className="flex items-center gap-2 hover:bg-muted/30 px-3 py-1 rounded transition-colors group"
+                >
+                  <CardTitle className="text-xl">
+                    {record.employeeName || `Employee ${record.employeeId}`}
+                  </CardTitle>
+                  <PencilSimple className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              )}
+              {!record.employeeName && !editingName && (
+                <Badge variant="outline" className="text-xs">
+                  ID: {record.employeeId}
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
-                  Total Hours
-                </div>
-                <div className="text-2xl font-semibold font-data text-accent">
-                  {formatMinutesToHours(totalMinutes)}
-                </div>
+            <div className="text-right">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                Total Hours
               </div>
-              <div className="flex gap-2">
-                {record.isDismissed ? (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleUndismiss}
-                    className="gap-2"
-                  >
-                    <ArrowCounterClockwise className="w-4 h-4" />
-                    Restore
-                  </Button>
-                ) : (
-                  <Button 
-                    variant="destructive" 
-                    size="sm" 
-                    onClick={() => setShowDismissDialog(true)}
-                    className="gap-2"
-                  >
-                    <UserMinus className="w-4 h-4" />
-                    Dismiss
-                  </Button>
-                )}
+              <div className="text-2xl font-semibold font-data text-accent">
+                {formatMinutesToHours(totalMinutes)}
               </div>
             </div>
           </div>
@@ -248,24 +246,6 @@ export function EmployeeTable({ record, onRecordUpdate, onDismiss, onUndismiss, 
           </div>
         </CardContent>
       </Card>
-
-      <AlertDialog open={showDismissDialog} onOpenChange={setShowDismissDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Dismiss Employee {record.employeeId}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will mark the employee as dismissed. Their records will remain visible but grayed out. 
-              You can restore them later if needed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDismissConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Dismiss Employee
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </motion.div>
   )
 }

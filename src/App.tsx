@@ -9,9 +9,8 @@ import {
   loadMonthlyRecords,
   saveShiftDefaults,
   loadShiftDefaults,
-  dismissEmployee,
-  undismissEmployee,
-  getDismissedEmployees
+  setEmployeeName,
+  getAllEmployeeNames
 } from './lib/db'
 import { FileUpload } from './components/FileUpload'
 import { MonthSelector } from './components/MonthSelector'
@@ -37,7 +36,7 @@ function App() {
     startTime: '08:00',
     endTime: '17:00'
   })
-  const [dismissedEmployees, setDismissedEmployees] = useState<string[]>([])
+  const [employeeNames, setEmployeeNames] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(true)
   
   const currentMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
@@ -70,8 +69,8 @@ function App() {
           setDefaults(savedDefaults)
         }
 
-        const dismissed = await getDismissedEmployees()
-        setDismissedEmployees(dismissed)
+        const names = await getAllEmployeeNames()
+        setEmployeeNames(names)
       } catch (err) {
         console.error('Failed to load data from IndexedDB:', err)
         toast.error('Failed to load saved data')
@@ -100,15 +99,6 @@ function App() {
       saveShiftDefaults(defaults).catch(err => console.error('Failed to save defaults:', err))
     }
   }, [defaults, isLoading])
-
-  useEffect(() => {
-    setMonthlyRecords(current =>
-      current.map(record => ({
-        ...record,
-        isDismissed: dismissedEmployees.includes(record.employeeId)
-      }))
-    )
-  }, [dismissedEmployees])
 
   const handleFileUpload = (content: string) => {
     try {
@@ -150,14 +140,14 @@ function App() {
     
     const records = generateMonthlyRecords(logs, selectedMonth, defaults || { startTime: '08:00', endTime: '17:00' })
     
-    const recordsWithStatus = records.map(record => ({
+    const recordsWithNames = records.map(record => ({
       ...record,
-      isDismissed: dismissedEmployees.includes(record.employeeId)
+      employeeName: employeeNames[record.employeeId]
     }))
     
     setMonthlyRecords((current) => {
       const filtered = (current || []).filter(r => r.month !== selectedMonth)
-      return [...filtered, ...recordsWithStatus]
+      return [...filtered, ...recordsWithNames]
     })
     
     toast.success(`Generated records for ${records.length} employees`)
@@ -174,26 +164,23 @@ function App() {
     )
   }
 
-  const handleDismissEmployee = async (employeeId: string) => {
+  const handleNameChange = async (employeeId: string, name: string) => {
     try {
-      await dismissEmployee(employeeId)
-      const updatedDismissed = await getDismissedEmployees()
-      setDismissedEmployees(updatedDismissed)
-      toast.success(`Employee ${employeeId} dismissed`)
+      await setEmployeeName(employeeId, name)
+      const updatedNames = await getAllEmployeeNames()
+      setEmployeeNames(updatedNames)
+      
+      setMonthlyRecords((current) =>
+        current.map(record =>
+          record.employeeId === employeeId
+            ? { ...record, employeeName: name }
+            : record
+        )
+      )
+      
+      toast.success(`Employee name updated`)
     } catch (err) {
-      toast.error('Failed to dismiss employee')
-      console.error(err)
-    }
-  }
-
-  const handleUndismissEmployee = async (employeeId: string) => {
-    try {
-      await undismissEmployee(employeeId)
-      const updatedDismissed = await getDismissedEmployees()
-      setDismissedEmployees(updatedDismissed)
-      toast.success(`Employee ${employeeId} restored`)
-    } catch (err) {
-      toast.error('Failed to restore employee')
+      toast.error('Failed to update employee name')
       console.error(err)
     }
   }
@@ -221,8 +208,6 @@ function App() {
   }
 
   const recordsForSelectedMonth = (monthlyRecords || []).filter(r => r.month === selectedMonth)
-  const activeRecords = recordsForSelectedMonth.filter(r => !r.isDismissed)
-  const dismissedRecords = recordsForSelectedMonth.filter(r => r.isDismissed)
 
   if (isLoading) {
     return (
@@ -328,37 +313,15 @@ function App() {
             </Alert>
           )}
 
-          {activeRecords.length > 0 && (
+          {recordsForSelectedMonth.length > 0 && (
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold">Active Employees</h2>
-              {activeRecords.map((record, index) => (
+              {recordsForSelectedMonth.map((record, index) => (
                 <EmployeeTable
                   key={`${record.employeeId}-${record.month}`}
                   record={record}
                   onRecordUpdate={handleRecordUpdate}
-                  onDismiss={handleDismissEmployee}
-                  onUndismiss={handleUndismissEmployee}
+                  onNameChange={handleNameChange}
                   index={index}
-                />
-              ))}
-            </div>
-          )}
-
-          {dismissedRecords.length > 0 && (
-            <div className="space-y-6 mt-12">
-              <div className="flex items-center gap-2">
-                <Separator className="flex-1" />
-                <h2 className="text-lg font-medium text-muted-foreground">Dismissed Employees</h2>
-                <Separator className="flex-1" />
-              </div>
-              {dismissedRecords.map((record, index) => (
-                <EmployeeTable
-                  key={`${record.employeeId}-${record.month}`}
-                  record={record}
-                  onRecordUpdate={handleRecordUpdate}
-                  onDismiss={handleDismissEmployee}
-                  onUndismiss={handleUndismissEmployee}
-                  index={index + activeRecords.length}
                 />
               ))}
             </div>

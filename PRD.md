@@ -47,17 +47,17 @@ The app handles CSV parsing, table generation, inline editing, and export functi
 - **Progression**: Click export → Select format (CSV/Print) → Generate file/open print dialog → Download/print
 - **Success criteria**: Exported data matches displayed table including manual corrections
 
-### Employee Dismissal Management
-- **Functionality**: Mark employees as dismissed while retaining their historical work records
-- **Purpose**: Maintain clean separation between active and dismissed employees without losing historical data
-- **Trigger**: User clicks "Dismiss" button on employee card
-- **Progression**: Click dismiss → Show confirmation dialog → Confirm action → Employee marked as dismissed → Card appears grayed out in "Dismissed Employees" section → Option to restore if needed
-- **Success criteria**: Dismissed employees persist across sessions, records remain intact but visually separated, restoration reverses dismissal state
+### Employee Naming
+- **Functionality**: Assign human-readable names to employees identified by numeric IDs
+- **Purpose**: Make work records more readable and professional by displaying employee names instead of just IDs
+- **Trigger**: User clicks on employee header to edit name
+- **Progression**: Click employee name/ID → Inline input appears → Enter name → Press Enter or click checkmark to save → Name persists and displays on employee card
+- **Success criteria**: Employee names persist across sessions, display prominently in headers, fallback to ID when no name set
 
 ### Persistent Data Storage
-- **Functionality**: Store all uploaded logs, generated records, settings, and dismissal status in IndexedDB
+- **Functionality**: Store all uploaded logs, generated records, settings, and employee names in IndexedDB
 - **Purpose**: Preserve user data between sessions without requiring manual saves or re-uploads
-- **Trigger**: Automatic on any data change (upload, generation, edit, dismissal, settings)
+- **Trigger**: Automatic on any data change (upload, generation, edit, naming, settings)
 - **Progression**: User makes change → Data automatically persisted to IndexedDB → On next visit, data loads from IndexedDB → User continues where they left off
 - **Success criteria**: All data survives page refresh and browser restart, loading state displays while data loads, errors handled gracefully
 
@@ -75,7 +75,8 @@ The app handles CSV parsing, table generation, inline editing, and export functi
 - **Completely invalid file**: Show error if no valid entries found after parsing
 - **Empty month**: Show empty state with helpful message to upload logs first
 - **Cross-midnight shifts**: Handle shifts that span past midnight correctly
-- **Dismissed employee records**: Dismissed employees appear in separate section, grayed out but fully functional
+- **Unnamed employees**: Display employee ID as fallback when no name assigned
+- **Name editing**: Allow canceling name edit with Escape key, saving with Enter or checkmark
 - **IndexedDB unavailable**: Graceful fallback with warning that data won't persist
 - **Data loading errors**: Show error message with option to continue without saved data
 - **Large datasets**: IndexedDB handles thousands of log entries without performance degradation
@@ -158,8 +159,9 @@ Animations emphasize data state changes and guide user attention to calculation 
   - Manual edit flag: PencilSimple
   - Regenerate: ArrowsClockwise
   - Print: Printer
-  - Dismiss employee: UserMinus
-  - Restore employee: ArrowCounterClockwise
+  - Edit name: PencilSimple
+  - Confirm: Check
+  - Cancel: X
   
 - **Spacing**:
   - Page padding: p-8

@@ -19,10 +19,10 @@ export interface DailyWorkRecord {
 
 export interface EmployeeMonthlyRecord {
   employeeId: string
+  employeeName?: string
   month: string
   dailyRecords: DailyWorkRecord[]
   totalMinutes: number
-  isDismissed?: boolean
 }
 
 export interface ShiftDefaults {

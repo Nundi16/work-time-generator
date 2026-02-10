@@ -5,7 +5,7 @@ interface DBSchema {
   logs: string
   monthlyRecords: string
   shiftDefaults: string
-  dismissedEmployees: string
+  employeeNames: string
 }
 
 class WorkTimeDB {
@@ -36,8 +36,8 @@ class WorkTimeDB {
           db.createObjectStore('shiftDefaults', { keyPath: 'id' })
         }
 
-        if (!db.objectStoreNames.contains('dismissedEmployees')) {
-          db.createObjectStore('dismissedEmployees', { keyPath: 'employeeId' })
+        if (!db.objectStoreNames.contains('employeeNames')) {
+          db.createObjectStore('employeeNames', { keyPath: 'employeeId' })
         }
       }
     })
@@ -134,23 +134,23 @@ export async function loadShiftDefaults<T>(): Promise<T | null> {
   return await workTimeDB.get<T>('shiftDefaults', 'current')
 }
 
-export async function dismissEmployee(employeeId: string): Promise<void> {
-  await workTimeDB.set('dismissedEmployees', employeeId, {
+export async function setEmployeeName(employeeId: string, name: string): Promise<void> {
+  await workTimeDB.set('employeeNames', employeeId, {
     employeeId,
-    dismissedAt: new Date().toISOString()
+    name,
+    updatedAt: new Date().toISOString()
   })
 }
 
-export async function undismissEmployee(employeeId: string): Promise<void> {
-  await workTimeDB.delete('dismissedEmployees', employeeId)
+export async function getEmployeeName(employeeId: string): Promise<string | null> {
+  const result = await workTimeDB.get<{ employeeId: string; name: string }>('employeeNames', employeeId)
+  return result?.name || null
 }
 
-export async function getDismissedEmployees(): Promise<string[]> {
-  const dismissed = await workTimeDB.getAll<{ employeeId: string; dismissedAt: string }>('dismissedEmployees')
-  return dismissed.map(d => d.employeeId)
-}
-
-export async function isEmployeeDismissed(employeeId: string): Promise<boolean> {
-  const dismissed = await getDismissedEmployees()
-  return dismissed.includes(employeeId)
+export async function getAllEmployeeNames(): Promise<Record<string, string>> {
+  const names = await workTimeDB.getAll<{ employeeId: string; name: string }>('employeeNames')
+  return names.reduce((acc, item) => {
+    acc[item.employeeId] = item.name
+    return acc
+  }, {} as Record<string, string>)
 }
