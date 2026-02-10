@@ -13,11 +13,11 @@ The app handles CSV parsing, table generation, inline editing, and export functi
 ## Essential Features
 
 ### CSV Log Upload & Parsing
-- **Functionality**: Parse tab-separated access control logs containing employee card swipes
-- **Purpose**: Convert raw access system data into normalized log entries for processing
+- **Functionality**: Parse tab-separated access control logs containing employee card swipes with fault-tolerant error handling
+- **Purpose**: Convert raw access system data into normalized log entries for processing, gracefully handling malformed data
 - **Trigger**: User clicks upload button and selects CSV/TSV file
-- **Progression**: Select file → Parse rows → Validate format → Show success/error notification → Enable generation button
-- **Success criteria**: All rows parsed correctly, invalid rows flagged with clear error messages
+- **Progression**: Select file → Parse rows → Skip invalid lines → Collect warnings → Show success notification with skip count → Display detailed warnings → Enable generation button
+- **Success criteria**: Valid rows parsed successfully, invalid rows skipped with detailed warnings showing line numbers and specific errors (invalid format, missing fields, invalid timestamps, invalid direction codes)
 
 ### Monthly Table Generation
 - **Functionality**: Generate structured daily work records for all employees in selected month
@@ -54,7 +54,11 @@ The app handles CSV parsing, table generation, inline editing, and export functi
 - **Missing OUT log**: Apply default shift end time, flag row with warning indicator
 - **Both IN/OUT missing**: Use full default shift hours, flag with strong warning
 - **Regeneration with edits**: Show clear warning dialog that manual corrections will be lost
-- **Invalid CSV format**: Display specific error messages indicating which rows/columns are malformed
+- **Invalid CSV format**: Skip malformed rows and continue processing, display detailed warnings with line numbers
+- **Invalid direction codes**: Skip rows with unrecognized direction codes (only 0=IN and 1=OUT are valid)
+- **Invalid timestamps**: Skip rows with unparseable date/time values
+- **Missing employee IDs**: Skip rows without employee identification
+- **Completely invalid file**: Show error if no valid entries found after parsing
 - **Empty month**: Show empty state with helpful message to upload logs first
 - **Cross-midnight shifts**: Handle shifts that span past midnight correctly
 

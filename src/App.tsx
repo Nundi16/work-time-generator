@@ -6,7 +6,7 @@ import { FileUpload } from './components/FileUpload'
 import { MonthSelector } from './components/MonthSelector'
 import { EmployeeTable } from './components/EmployeeTable'
 import { Button } from './components/ui/button'
-import { Alert, AlertDescription } from './components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from './components/ui/alert'
 import { Separator } from './components/ui/separator'
 import {
   Dialog,
@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from './components/ui/dialog'
-import { ArrowsClockwise, DownloadSimple, Printer, WarningCircle } from '@phosphor-icons/react'
+import { ArrowsClockwise, DownloadSimple, Printer, WarningCircle, Info } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 
 function App() {
@@ -31,16 +31,24 @@ function App() {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
   const [showRegenerateDialog, setShowRegenerateDialog] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [parseWarnings, setParseWarnings] = useState<string[]>([])
 
   const handleFileUpload = (content: string) => {
     try {
-      const parsedLogs = parseCSV(content)
-      setLogs(parsedLogs)
-      toast.success(`Loaded ${parsedLogs.length} log entries`)
+      const result = parseCSV(content)
+      setLogs(result.entries)
+      setParseWarnings(result.warnings)
+      
+      if (result.skippedLines > 0) {
+        toast.warning(`Loaded ${result.entries.length} entries, ${result.skippedLines} lines skipped`)
+      } else {
+        toast.success(`Loaded ${result.entries.length} log entries`)
+      }
       setError(null)
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to parse CSV file'
       setError(errorMsg)
+      setParseWarnings([])
       toast.error(errorMsg)
     }
   }
@@ -125,6 +133,25 @@ function App() {
             <Alert variant="destructive">
               <WarningCircle className="w-4 h-4" />
               <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {parseWarnings.length > 0 && (
+            <Alert>
+              <Info className="w-4 h-4" />
+              <AlertTitle>File Processing Warnings</AlertTitle>
+              <AlertDescription>
+                <div className="mt-2 space-y-1 text-sm">
+                  {parseWarnings.slice(0, 10).map((warning, idx) => (
+                    <div key={idx}>• {warning}</div>
+                  ))}
+                  {parseWarnings.length > 10 && (
+                    <div className="text-muted-foreground italic mt-2">
+                      ...and {parseWarnings.length - 10} more warnings
+                    </div>
+                  )}
+                </div>
+              </AlertDescription>
             </Alert>
           )}
 

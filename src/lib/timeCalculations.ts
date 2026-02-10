@@ -1,8 +1,16 @@
 import { RawLogEntry, DailyWorkRecord, EmployeeMonthlyRecord, ShiftDefaults } from './types'
 
-export function parseCSV(csvContent: string): RawLogEntry[] {
+export interface ParseResult {
+  entries: RawLogEntry[]
+  skippedLines: number
+  warnings: string[]
+}
+
+export function parseCSV(csvContent: string): ParseResult {
   const lines = csvContent.trim().split('\n')
   const entries: RawLogEntry[] = []
+  const warnings: string[] = []
+  let skippedLines = 0
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
@@ -10,20 +18,33 @@ export function parseCSV(csvContent: string): RawLogEntry[] {
 
     const fields = line.split('\t')
     if (fields.length < 4) {
-      throw new Error(`Invalid format at line ${i + 1}: expected at least 4 fields`)
+      warnings.push(`Line ${i + 1}: Invalid format (expected at least 4 fields) - skipped`)
+      skippedLines++
+      continue
     }
 
     const employeeId = fields[0].trim()
-    const timestamp = new Date(fields[1].trim())
+    const timestampStr = fields[1].trim()
     const directionCode = fields[3].trim()
 
+    if (!employeeId) {
+      warnings.push(`Line ${i + 1}: Missing employee ID - skipped`)
+      skippedLines++
+      continue
+    }
+
+    const timestamp = new Date(timestampStr)
     if (isNaN(timestamp.getTime())) {
-      throw new Error(`Invalid timestamp at line ${i + 1}: ${fields[1]}`)
+      warnings.push(`Line ${i + 1}: Invalid timestamp "${timestampStr}" - skipped`)
+      skippedLines++
+      continue
     }
 
     const direction = directionCode === '0' ? 'IN' : directionCode === '1' ? 'OUT' : null
     if (!direction) {
-      throw new Error(`Invalid direction code at line ${i + 1}: ${directionCode}`)
+      warnings.push(`Line ${i + 1}: Invalid direction code "${directionCode}" - skipped`)
+      skippedLines++
+      continue
     }
 
     entries.push({
@@ -33,7 +54,11 @@ export function parseCSV(csvContent: string): RawLogEntry[] {
     })
   }
 
-  return entries
+  if (entries.length === 0 && lines.length > 0) {
+    throw new Error('No valid entries found in the file')
+  }
+
+  return { entries, skippedLines, warnings }
 }
 
 export function generateMonthlyRecords(
