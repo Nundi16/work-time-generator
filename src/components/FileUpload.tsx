@@ -60,16 +60,16 @@ export function FileUpload({ onFileUpload }: FileUploadProps) {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".csv,.tsv,.txt"
+        accept=".csv,.tsv,.txt,.dat"
         onChange={handleFileChange}
         className="hidden"
       />
       <UploadSimple className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
       <p className="text-sm font-medium mb-1">
-        Húzza ide a CSV fájlt vagy kattintson a feltöltéshez
+        Húzza ide a fájlt vagy kattintson a feltöltéshez
       </p>
       <p className="text-xs text-muted-foreground">
-        Tabulátorral elválasztott beléptető napló (.csv, .tsv, .txt)
+        Tabulátorral elválasztott beléptető napló (.csv, .tsv, .txt, .dat)
       </p>
     </div>
   )
