@@ -9,7 +9,7 @@ interface DBSchema {
 }
 
 class WorkTimeDB {
-  private db: IDBDatabase | null = null
+  public db: IDBDatabase | null = null
 
   async init(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -135,22 +135,56 @@ export async function loadShiftDefaults<T>(): Promise<T | null> {
 }
 
 export async function setEmployeeName(employeeId: string, name: string): Promise<void> {
-  await workTimeDB.set('employeeNames', employeeId, {
-    employeeId,
-    name,
-    updatedAt: new Date().toISOString()
+  const db = workTimeDB['db']
+  if (!db) throw new Error('Database not initialized')
+  
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['employeeNames'], 'readwrite')
+    const store = transaction.objectStore('employeeNames')
+    const request = store.put({
+      employeeId,
+      name,
+      updatedAt: new Date().toISOString()
+    })
+
+    request.onerror = () => reject(request.error)
+    request.onsuccess = () => resolve()
   })
 }
 
 export async function getEmployeeName(employeeId: string): Promise<string | null> {
-  const result = await workTimeDB.get<{ employeeId: string; name: string }>('employeeNames', employeeId)
-  return result?.name || null
+  const db = workTimeDB['db']
+  if (!db) throw new Error('Database not initialized')
+  
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['employeeNames'], 'readonly')
+    const store = transaction.objectStore('employeeNames')
+    const request = store.get(employeeId)
+
+    request.onerror = () => reject(request.error)
+    request.onsuccess = () => {
+      const result = request.result
+      resolve(result?.name || null)
+    }
+  })
 }
 
 export async function getAllEmployeeNames(): Promise<Record<string, string>> {
-  const names = await workTimeDB.getAll<{ employeeId: string; name: string }>('employeeNames')
-  return names.reduce((acc, item) => {
-    acc[item.employeeId] = item.name
-    return acc
-  }, {} as Record<string, string>)
+  const db = workTimeDB['db']
+  if (!db) throw new Error('Database not initialized')
+  
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['employeeNames'], 'readonly')
+    const store = transaction.objectStore('employeeNames')
+    const request = store.getAll()
+
+    request.onerror = () => reject(request.error)
+    request.onsuccess = () => {
+      const names = request.result.reduce((acc: Record<string, string>, item: any) => {
+        acc[item.employeeId] = item.name
+        return acc
+      }, {})
+      resolve(names)
+    }
+  })
 }
