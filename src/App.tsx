@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { RawLogEntry, EmployeeMonthlyRecord, ShiftDefaults, DailyWorkRecord } from './lib/types'
-import { parseCSV, generateMonthlyRecords, exportToCSV } from './lib/timeCalculations'
+import { parseCSV, generateMonthlyRecords } from './lib/timeCalculations'
 import { 
   initDB, 
   saveLogs, 
@@ -15,6 +15,7 @@ import {
 import { FileUpload } from './components/FileUpload'
 import { MonthSelector } from './components/MonthSelector'
 import { EmployeeTable } from './components/EmployeeTable'
+import { PrintView } from './components/PrintView'
 import { Button } from './components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from './components/ui/alert'
 import { Separator } from './components/ui/separator'
@@ -26,7 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from './components/ui/dialog'
-import { ArrowsClockwise, DownloadSimple, Printer, WarningCircle, Info } from '@phosphor-icons/react'
+import { ArrowsClockwise, Printer, WarningCircle, Info } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 
 function App() {
@@ -185,24 +186,6 @@ function App() {
     }
   }
 
-  const handleExport = () => {
-    const recordsForMonth = (monthlyRecords || []).filter(r => r.month === selectedMonth)
-    if (recordsForMonth.length === 0) {
-      toast.error('No records to export')
-      return
-    }
-
-    const csv = exportToCSV(recordsForMonth)
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `work-time-${selectedMonth}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-    toast.success('Exported to CSV')
-  }
-
   const handlePrint = () => {
     window.print()
   }
@@ -222,7 +205,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto px-4 md:px-8 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 md:px-8 py-8 max-w-7xl no-print">
         <header className="mb-8">
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mb-2">
             Work Time Generator
@@ -292,10 +275,6 @@ function App() {
               <>
                 <Separator />
                 <div className="flex flex-wrap gap-2">
-                  <Button onClick={handleExport} variant="outline" className="gap-2">
-                    <DownloadSimple className="w-4 h-4" />
-                    Export CSV
-                  </Button>
                   <Button onClick={handlePrint} variant="outline" className="gap-2">
                     <Printer className="w-4 h-4" />
                     Print
@@ -328,6 +307,8 @@ function App() {
           )}
         </div>
       </div>
+
+      <PrintView records={recordsForSelectedMonth} month={selectedMonth} />
 
       <Dialog open={showRegenerateDialog} onOpenChange={setShowRegenerateDialog}>
         <DialogContent>

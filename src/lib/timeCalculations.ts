@@ -177,25 +177,3 @@ export function formatMinutesToHours(minutes: number): string {
   const mins = minutes % 60
   return `${hours}:${String(mins).padStart(2, '0')}`
 }
-
-export function exportToCSV(records: EmployeeMonthlyRecord[]): string {
-  let csv = 'Employee ID,Date,Arrival,Departure,Worked Hours,Warnings\n'
-
-  for (const employee of records) {
-    for (const day of employee.dailyRecords) {
-      if (!day.arrival && !day.departure) continue
-
-      const warnings: string[] = []
-      if (day.missingIn) warnings.push('Missing IN')
-      if (day.missingOut) warnings.push('Missing OUT')
-      if (day.hasMultipleLogs) warnings.push('Multiple logs')
-      if (day.manuallyEdited) warnings.push('Manually edited')
-
-      csv += `${employee.employeeId},${day.date},${day.arrival || ''},${day.departure || ''},${formatMinutesToHours(day.workedMinutes)},${warnings.join('; ')}\n`
-    }
-
-    csv += `${employee.employeeId},TOTAL,,,${formatMinutesToHours(employee.totalMinutes)},\n\n`
-  }
-
-  return csv
-}

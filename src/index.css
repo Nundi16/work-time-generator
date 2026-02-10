@@ -83,3 +83,29 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-data);
   font-variant-numeric: tabular-nums;
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-page-break {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .print-page-break:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+}
