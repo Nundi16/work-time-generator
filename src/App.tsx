@@ -1,7 +1,18 @@
-import { useState } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { useState, useEffect } from 'react'
 import { RawLogEntry, EmployeeMonthlyRecord, ShiftDefaults, DailyWorkRecord } from './lib/types'
 import { parseCSV, generateMonthlyRecords, exportToCSV } from './lib/timeCalculations'
+import { 
+  initDB, 
+  saveLogs, 
+  loadLogs, 
+  saveMonthlyRecords, 
+  loadMonthlyRecords,
+  saveShiftDefaults,
+  loadShiftDefaults,
+  dismissEmployee,
+  undismissEmployee,
+  getDismissedEmployees
+} from './lib/db'
 import { FileUpload } from './components/FileUpload'
 import { MonthSelector } from './components/MonthSelector'
 import { EmployeeTable } from './components/EmployeeTable'
@@ -20,18 +31,84 @@ import { ArrowsClockwise, DownloadSimple, Printer, WarningCircle, Info } from '@
 import { toast } from 'sonner'
 
 function App() {
-  const [logs, setLogs] = useKV<RawLogEntry[]>('access-logs', [])
-  const [monthlyRecords, setMonthlyRecords] = useKV<EmployeeMonthlyRecord[]>('monthly-records', [])
-  const [defaults, setDefaults] = useKV<ShiftDefaults>('shift-defaults', {
+  const [logs, setLogs] = useState<RawLogEntry[]>([])
+  const [monthlyRecords, setMonthlyRecords] = useState<EmployeeMonthlyRecord[]>([])
+  const [defaults, setDefaults] = useState<ShiftDefaults>({
     startTime: '08:00',
     endTime: '17:00'
   })
+  const [dismissedEmployees, setDismissedEmployees] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   
   const currentMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
   const [showRegenerateDialog, setShowRegenerateDialog] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [parseWarnings, setParseWarnings] = useState<string[]>([])
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await initDB()
+        
+        const savedLogs = await loadLogs<RawLogEntry[]>()
+        if (savedLogs) {
+          const parsedLogs = savedLogs.map(log => ({
+            ...log,
+            timestamp: new Date(log.timestamp)
+          }))
+          setLogs(parsedLogs)
+        }
+
+        const savedRecords = await loadMonthlyRecords<EmployeeMonthlyRecord[]>()
+        if (savedRecords) {
+          setMonthlyRecords(savedRecords)
+        }
+
+        const savedDefaults = await loadShiftDefaults<ShiftDefaults>()
+        if (savedDefaults) {
+          setDefaults(savedDefaults)
+        }
+
+        const dismissed = await getDismissedEmployees()
+        setDismissedEmployees(dismissed)
+      } catch (err) {
+        console.error('Failed to load data from IndexedDB:', err)
+        toast.error('Failed to load saved data')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  useEffect(() => {
+    if (!isLoading && logs.length > 0) {
+      saveLogs(logs).catch(err => console.error('Failed to save logs:', err))
+    }
+  }, [logs, isLoading])
+
+  useEffect(() => {
+    if (!isLoading && monthlyRecords.length > 0) {
+      saveMonthlyRecords(monthlyRecords).catch(err => console.error('Failed to save records:', err))
+    }
+  }, [monthlyRecords, isLoading])
+
+  useEffect(() => {
+    if (!isLoading) {
+      saveShiftDefaults(defaults).catch(err => console.error('Failed to save defaults:', err))
+    }
+  }, [defaults, isLoading])
+
+  useEffect(() => {
+    setMonthlyRecords(current =>
+      current.map(record => ({
+        ...record,
+        isDismissed: dismissedEmployees.includes(record.employeeId)
+      }))
+    )
+  }, [dismissedEmployees])
 
   const handleFileUpload = (content: string) => {
     try {
@@ -73,9 +150,14 @@ function App() {
     
     const records = generateMonthlyRecords(logs, selectedMonth, defaults || { startTime: '08:00', endTime: '17:00' })
     
+    const recordsWithStatus = records.map(record => ({
+      ...record,
+      isDismissed: dismissedEmployees.includes(record.employeeId)
+    }))
+    
     setMonthlyRecords((current) => {
       const filtered = (current || []).filter(r => r.month !== selectedMonth)
-      return [...filtered, ...records]
+      return [...filtered, ...recordsWithStatus]
     })
     
     toast.success(`Generated records for ${records.length} employees`)
@@ -90,6 +172,30 @@ function App() {
           : record
       )
     )
+  }
+
+  const handleDismissEmployee = async (employeeId: string) => {
+    try {
+      await dismissEmployee(employeeId)
+      const updatedDismissed = await getDismissedEmployees()
+      setDismissedEmployees(updatedDismissed)
+      toast.success(`Employee ${employeeId} dismissed`)
+    } catch (err) {
+      toast.error('Failed to dismiss employee')
+      console.error(err)
+    }
+  }
+
+  const handleUndismissEmployee = async (employeeId: string) => {
+    try {
+      await undismissEmployee(employeeId)
+      const updatedDismissed = await getDismissedEmployees()
+      setDismissedEmployees(updatedDismissed)
+      toast.success(`Employee ${employeeId} restored`)
+    } catch (err) {
+      toast.error('Failed to restore employee')
+      console.error(err)
+    }
   }
 
   const handleExport = () => {
@@ -115,6 +221,19 @@ function App() {
   }
 
   const recordsForSelectedMonth = (monthlyRecords || []).filter(r => r.month === selectedMonth)
+  const activeRecords = recordsForSelectedMonth.filter(r => !r.isDismissed)
+  const dismissedRecords = recordsForSelectedMonth.filter(r => r.isDismissed)
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading data...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -209,16 +328,41 @@ function App() {
             </Alert>
           )}
 
-          <div className="space-y-6">
-            {recordsForSelectedMonth.map((record, index) => (
-              <EmployeeTable
-                key={`${record.employeeId}-${record.month}`}
-                record={record}
-                onRecordUpdate={handleRecordUpdate}
-                index={index}
-              />
-            ))}
-          </div>
+          {activeRecords.length > 0 && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold">Active Employees</h2>
+              {activeRecords.map((record, index) => (
+                <EmployeeTable
+                  key={`${record.employeeId}-${record.month}`}
+                  record={record}
+                  onRecordUpdate={handleRecordUpdate}
+                  onDismiss={handleDismissEmployee}
+                  onUndismiss={handleUndismissEmployee}
+                  index={index}
+                />
+              ))}
+            </div>
+          )}
+
+          {dismissedRecords.length > 0 && (
+            <div className="space-y-6 mt-12">
+              <div className="flex items-center gap-2">
+                <Separator className="flex-1" />
+                <h2 className="text-lg font-medium text-muted-foreground">Dismissed Employees</h2>
+                <Separator className="flex-1" />
+              </div>
+              {dismissedRecords.map((record, index) => (
+                <EmployeeTable
+                  key={`${record.employeeId}-${record.month}`}
+                  record={record}
+                  onRecordUpdate={handleRecordUpdate}
+                  onDismiss={handleDismissEmployee}
+                  onUndismiss={handleUndismissEmployee}
+                  index={index + activeRecords.length}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

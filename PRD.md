@@ -47,6 +47,20 @@ The app handles CSV parsing, table generation, inline editing, and export functi
 - **Progression**: Click export → Select format (CSV/Print) → Generate file/open print dialog → Download/print
 - **Success criteria**: Exported data matches displayed table including manual corrections
 
+### Employee Dismissal Management
+- **Functionality**: Mark employees as dismissed while retaining their historical work records
+- **Purpose**: Maintain clean separation between active and dismissed employees without losing historical data
+- **Trigger**: User clicks "Dismiss" button on employee card
+- **Progression**: Click dismiss → Show confirmation dialog → Confirm action → Employee marked as dismissed → Card appears grayed out in "Dismissed Employees" section → Option to restore if needed
+- **Success criteria**: Dismissed employees persist across sessions, records remain intact but visually separated, restoration reverses dismissal state
+
+### Persistent Data Storage
+- **Functionality**: Store all uploaded logs, generated records, settings, and dismissal status in IndexedDB
+- **Purpose**: Preserve user data between sessions without requiring manual saves or re-uploads
+- **Trigger**: Automatic on any data change (upload, generation, edit, dismissal, settings)
+- **Progression**: User makes change → Data automatically persisted to IndexedDB → On next visit, data loads from IndexedDB → User continues where they left off
+- **Success criteria**: All data survives page refresh and browser restart, loading state displays while data loads, errors handled gracefully
+
 ## Edge Case Handling
 
 - **Multiple scans per day**: Use only earliest IN and latest OUT, ignore intermediate logs
@@ -61,6 +75,10 @@ The app handles CSV parsing, table generation, inline editing, and export functi
 - **Completely invalid file**: Show error if no valid entries found after parsing
 - **Empty month**: Show empty state with helpful message to upload logs first
 - **Cross-midnight shifts**: Handle shifts that span past midnight correctly
+- **Dismissed employee records**: Dismissed employees appear in separate section, grayed out but fully functional
+- **IndexedDB unavailable**: Graceful fallback with warning that data won't persist
+- **Data loading errors**: Show error message with option to continue without saved data
+- **Large datasets**: IndexedDB handles thousands of log entries without performance degradation
 
 ## Design Direction
 
@@ -140,6 +158,8 @@ Animations emphasize data state changes and guide user attention to calculation 
   - Manual edit flag: PencilSimple
   - Regenerate: ArrowsClockwise
   - Print: Printer
+  - Dismiss employee: UserMinus
+  - Restore employee: ArrowCounterClockwise
   
 - **Spacing**:
   - Page padding: p-8

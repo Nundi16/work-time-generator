@@ -22,6 +22,7 @@ export interface EmployeeMonthlyRecord {
   month: string
   dailyRecords: DailyWorkRecord[]
   totalMinutes: number
+  isDismissed?: boolean
 }
 
 export interface ShiftDefaults {
