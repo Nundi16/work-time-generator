@@ -1,5 +1,5 @@
 const DB_NAME = 'WorkTimeGeneratorDB'
-const DB_VERSION = 1
+const DB_VERSION = 2
 
 interface DBSchema {
   logs: string
