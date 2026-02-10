@@ -9,13 +9,13 @@ export function parseCSV(csvContent: string): RawLogEntry[] {
     if (!line) continue
 
     const fields = line.split('\t')
-    if (fields.length < 5) {
-      throw new Error(`Invalid format at line ${i + 1}: expected at least 5 fields`)
+    if (fields.length < 4) {
+      throw new Error(`Invalid format at line ${i + 1}: expected at least 4 fields`)
     }
 
     const employeeId = fields[0].trim()
     const timestamp = new Date(fields[1].trim())
-    const directionCode = fields[4].trim()
+    const directionCode = fields[3].trim()
 
     if (isNaN(timestamp.getTime())) {
       throw new Error(`Invalid timestamp at line ${i + 1}: ${fields[1]}`)
