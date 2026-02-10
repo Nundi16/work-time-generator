@@ -1,5 +1,5 @@
 const DB_NAME = 'WorkTimeGeneratorDB'
-const DB_VERSION = 2
+const DB_VERSION = 3
 
 interface DBSchema {
   logs: string
@@ -16,13 +16,33 @@ class WorkTimeDB {
       const request = indexedDB.open(DB_NAME, DB_VERSION)
 
       request.onerror = () => reject(request.error)
+      
       request.onsuccess = () => {
         this.db = request.result
+        
+        const requiredStores = ['logs', 'monthlyRecords', 'shiftDefaults', 'employeeNames']
+        const existingStores = Array.from(this.db.objectStoreNames)
+        const missingStores = requiredStores.filter(store => !existingStores.includes(store))
+        
+        if (missingStores.length > 0) {
+          console.warn('Database is missing stores:', missingStores)
+          this.db.close()
+          this.db = null
+          
+          indexedDB.deleteDatabase(DB_NAME)
+          
+          setTimeout(() => {
+            this.init().then(resolve).catch(reject)
+          }, 100)
+          return
+        }
+        
         resolve()
       }
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result
+        const transaction = (event.target as IDBOpenDBRequest).transaction
 
         if (!db.objectStoreNames.contains('logs')) {
           db.createObjectStore('logs', { keyPath: 'id' })
